@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>界面预览 · 全科导学系统</title>
+  <link rel="stylesheet" href="app.css">
+  <style>
+    .pv-bar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: #faeeda;
+      color: #854f0b;
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 8px 16px;
+      text-align: center;
+      padding-top: calc(8px + env(safe-area-inset-top, 0px));
+    }
+
+    .appbar {
+      position: static;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="pv-bar">
+    这是<strong>界面预览</strong>，用于确认外观与交互。数据为示例，不写入云端；正式版本需要发布后登录使用。
+  </div>
+
+  <div class="screen active" id="screen-preview">
+    <div class="appbar">
+      <div style="flex:1;min-width:0">
+        <h1 id="pv-title">今日任务</h1>
+        <div class="sub" id="pv-sub">小满 · 已掌握 3/42</div>
+      </div>
+    </div>
+    <div class="page" id="pv-page"></div>
+    <nav class="tabbar" id="pv-tabbar">
+      <button type="button" data-tab="today" class="on">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+        今日任务
+      </button>
+      <button type="button" data-tab="map">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+        知识图谱
+      </button>
+      <button type="button" data-tab="wrong">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M15 9l-6 6M9 9l6 6" />
+        </svg>
+        错题本
+      </button>
+      <button type="button" data-tab="me">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"
+          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+        我的
+      </button>
+    </nav>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    (function () {
+      var SUBJECTS = ['语文', '数学', '英语', '奥数', '信息学'];
+
+      var KNOWLEDGE = [
+        { subject: '数学', chapter: '第五单元 圆', name: '圆的周长', summary: '圆的周长等于直径乘圆周率', status: 'learning' },
+        { subject: '数学', chapter: '第三单元 分数除法', name: '一个数除以分数', summary: '除以一个不为 0 的数等于乘它的倒数', status: 'learning' },
+        { subject: '数学', chapter: '第四单元 比', name: '按比分配', summary: '先求总份数再求每份的量', status: 'new' },
+        { subject: '数学', chapter: '第六单元 百分数', name: '求百分率', summary: '比较量除以标准量再乘 100%', status: 'new' },
+        { subject: '数学', chapter: '第一单元 分数乘法', name: '分数乘整数', summary: '分子与整数相乘的积作分子', status: 'mastered' },
+        { subject: '数学', chapter: '第五单元 圆', name: '圆的面积', summary: '剪拼成长方形推导出公式', status: 'mastered' },
+        { subject: '语文', chapter: '第八单元 走近鲁迅', name: '《少年闰土》人物描写', summary: '通过外貌、动作、语言表现人物', status: 'learning' },
+        { subject: '语文', chapter: '第二单元 革命岁月', name: '《七律·长征》背诵', summary: '理解红军长征的艰难与乐观', status: 'new' },
+        { subject: '语文', chapter: '第四单元 小说', name: '《穷人》心理描写', summary: '通过心理描写刻画人物', status: 'new' },
+        { subject: '语文', chapter: '第一单元 触摸自然', name: '《草原》情景交融', summary: '体会风光美与蒙汉情深', status: 'mastered' },
+        { subject: '英语', chapter: 'Unit 3 My weekend plan', name: 'be going to 一般将来时', summary: 'be going to 加动词原形', status: 'learning' },
+        { subject: '英语', chapter: 'Unit 4 I have a pen pal', name: '第三人称单数变化', summary: '一般动词加 s，特殊结尾加 es', status: 'new' },
+        { subject: '英语', chapter: 'Unit 5 What does he do?', name: '职业词汇', summary: 'factory worker、postman 等', status: 'new' },
+        { subject: '英语', chapter: 'Unit 1', name: '方位介词', summary: 'next to、behind、between 等', status: 'mastered' },
+        { subject: '奥数', chapter: '计算专题', name: '裂项相消', summary: '把每一项拆成差的形式后相消求和', status: 'learning' },
+        { subject: '奥数', chapter: '分数应用题', name: '统一单位 1', summary: '多个不同单位 1 时统一成同一个量', status: 'new' },
+        { subject: '奥数', chapter: '行程问题', name: '流水行船', summary: '顺水速、逆水速与水速的关系', status: 'new' },
+        { subject: '奥数', chapter: '数论专题', name: '数的整除特征', summary: '被 2、3、5、9、11 整除的判断', status: 'mastered' },
+        { subject: '信息学', chapter: '排序算法', name: '冒泡排序', summary: '相邻两两比较交换，大的往后冒', status: 'learning' },
+        { subject: '信息学', chapter: '查找与二分', name: '二分查找', summary: '有序序列每次折半，注意边界', status: 'new' },
+        { subject: '信息学', chapter: '数论基础', name: '最大公约数与最小公倍数', summary: '辗转相除法', status: 'new' },
+        { subject: '信息学', chapter: '前缀和与差分', name: '前缀和', summary: '两次相减快速求区间和', status: 'new' },
+        { subject: '信息学', chapter: '算法思想', name: '贪心算法入门', summary: '每步选当前最优，需能说明正确性', status: 'mastered' }
+      ];
+
+      function $(s) { return document.querySelector(s); }
+
+      function el(tag, attrs, children) {
+        var node = document.createElement(tag);
+        if (attrs) Object.keys(attrs).forEach(function (k) {
+          var v = attrs[k];
+          if (v === null || v === undefined) return;
+          if (k === 'class') node.className = v;
+          else if (k === 'text') node.textContent = v;
+          else if (k === 'style') node.setAttribute('style', v);
+          else if (k.indexOf('on') === 0) node.addEventListener(k.slice(2), v);
+          else node.setAttribute(k, v);
+        });
+        (children || []).forEach(function (c) {
+          if (c === null || c === undefined) return;
+          node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+        });
+        return node;
+      }
+
+      function clear(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+
+      var state = { tab: 'today', subject: '全部' };
+
+      function statusLabel(s) {
+        return s === 'mastered' ? '已掌握' : s === 'learning' ? '待巩固' : '未学';
+      }
+
+      function stats() {
+        var total = KNOWLEDGE.length;
+        var mastered = KNOWLEDGE.filter(function (k) { return k.status === 'mastered'; }).length;
+        var learning = KNOWLEDGE.filter(function (k) { return k.status === 'learning'; }).length;
+        return { total: total, mastered: mastered, learning: learning };
+      }
+
+      function chips(rerender) {
+        var wrap = el('div', { class: 'chips' });
+        ['全部'].concat(SUBJECTS).forEach(function (name) {
+          wrap.appendChild(el('button', {
+            class: 'chip' + (state.subject === name ? ' on' : ''),
+            type: 'button',
+            text: name,
+            onclick: function () { state.subject = name; rerender(); }
+          }));
+        });
+        return wrap;
+      }
+
+      function row(item) {
+        return el('button', {
+          class: 'row',
+          type: 'button',
+          onclick: function () { openLesson(item); }
+        }, [
+          el('span', { class: 'dot ' + (item.status === 'new' ? '' : item.status) }),
+          el('span', { class: 'body' }, [
+            el('div', { class: 'name', text: item.name }),
+            el('div', { class: 'sub', text: item.chapter })
+          ]),
+          el('span', { class: 'tail' }, [
+            el('span', { class: 'tag subject', text: item.subject }),
+            item.status !== 'new' ? el('span', { class: 'tag ' + item.status, text: statusLabel(item.status) }) : null
+          ])
+        ]);
+      }
+
+      function renderToday() {
+        var page = $('#pv-page');
+        clear(page);
+        page.appendChild(chips(renderToday));
+
+        var pending = KNOWLEDGE.filter(function (k) {
+          if (k.status === 'mastered') return false;
+          return state.subject === '全部' || k.subject === state.subject;
+        });
+
+        var s = stats();
+        page.appendChild(el('div', { class: 'card' }, [
+          el('div', { class: 'card-head' }, [
+            el('h2', { class: 'card-title', text: '整体进度' }),
+            el('span', { class: 'card-meta', text: s.mastered + ' / ' + s.total + ' 个知识点已掌握' })
+          ]),
+          el('div', { class: 'bar' }, [
+            el('i', { style: 'width:' + Math.round((s.mastered / s.total) * 100) + '%' })
+          ]),
+          el('div', { class: 'card-summary', text: '掌握度越高，今日清单越短 —— 已掌握的知识点会自动从清单里消失。' })
+        ]));
+
+        page.appendChild(el('div', { class: 'section-title' }, [
+          '今日该学',
+          el('span', { class: 'count', text: pending.length + ' 项' })
+        ]));
+        pending.forEach(function (k) { page.appendChild(row(k)); });
+      }
+
+      function renderMap() {
+        var page = $('#pv-page');
+        clear(page);
+        page.appendChild(chips(renderMap));
+
+        var grouped = {};
+        KNOWLEDGE.forEach(function (k) {
+          if (state.subject !== '全部' && k.subject !== state.subject) return;
+          if (!grouped[k.subject]) grouped[k.subject] = [];
+          grouped[k.subject].push(k);
+        });
+
+        Object.keys(grouped).forEach(function (subject) {
+          var items = grouped[subject];
+          var done = items.filter(function (i) { return i.status === 'mastered'; }).length;
+          page.appendChild(el('div', { class: 'section-title' }, [
+            subject,
+            el('span', { class: 'count', text: done + ' / ' + items.length + ' 已掌握' })
+          ]));
+          items.forEach(function (i) { page.appendChild(row(i)); });
+        });
+      }
+
+      function renderWrong() {
+        var page = $('#pv-page');
+        clear(page);
+        page.appendChild(el('div', { class: 'section-title' }, ['待消灭', el('span', { class: 'count', text: '2 道' })]));
+
+        [{
+          name: '圆的周长',
+          stem: '一个圆形花坛的直径是 6 米，它的周长是多少米？',
+          answer: '18.84 米',
+          analysis: '周长等于直径乘圆周率，6 × 3.14 = 18.84 米。注意区分直径和半径，题目给的是直径直接乘即可。',
+          count: 2
+        }, {
+          name: '一个数除以分数',
+          stem: '计算：5/6 ÷ 5/12 = ____',
+          answer: '2',
+          analysis: '除以一个分数等于乘它的倒数，5/6 × 12/5 = 2。先约分再相乘能避免大数运算。',
+          count: 1
+        }].forEach(function (w) {
+          page.appendChild(el('div', { class: 'card' }, [
+            el('div', { class: 'card-head' }, [
+              el('h3', { class: 'card-title', text: w.name }),
+              el('span', { class: 'card-meta', text: '错 ' + w.count + ' 次' })
+            ]),
+            el('p', { class: 'card-summary', text: w.stem }),
+            el('div', { class: 'line', text: '正确答案：' + w.answer }),
+            el('p', { class: 'card-summary', text: '解析：' + w.analysis }),
+            el('div', { class: 'actions' }, [
+              el('button', { class: 'btn secondary', type: 'button', text: '再练一遍', onclick: function () { alert('预览模式下不执行操作'); } }),
+              el('button', { class: 'btn', type: 'button', text: '已消灭', onclick: function () { alert('预览模式下不执行操作'); } })
+            ])
+          ]));
+        });
+      }
+
+      function renderMe() {
+        var page = $('#pv-page');
+        clear(page);
+        var s = stats();
+
+        page.appendChild(el('div', { class: 'stat-grid' }, [
+          el('div', { class: 'stat' }, [el('div', { class: 'num', text: String(s.total) }), el('div', { class: 'label', text: '知识点总数' })]),
+          el('div', { class: 'stat' }, [el('div', { class: 'num', style: 'color:#1d9e75', text: String(s.mastered) }), el('div', { class: 'label', text: '已掌握' })]),
+          el('div', { class: 'stat' }, [el('div', { class: 'num', style: 'color:#ba7517', text: String(s.learning) }), el('div', { class: 'label', text: '待巩固' })])
+        ]));
+
+        page.appendChild(el('div', { class: 'card' }, [
+          el('div', { class: 'card-head' }, [el('h2', { class: 'card-title', text: '分科掌握情况' })])
+        ].concat(SUBJECTS.map(function (subject) {
+          var items = KNOWLEDGE.filter(function (i) { return i.subject === subject; });
+          var done = items.filter(function (i) { return i.status === 'mastered'; }).length;
+          var pct = items.length ? Math.round((done / items.length) * 100) : 0;
+          return el('div', { style: 'margin-top:14px' }, [
+            el('div', { class: 'card-head' }, [
+              el('span', { class: 'card-title', style: 'font-size:14px', text: subject }),
+              el('span', { class: 'card-meta', text: done + ' / ' + items.length })
+            ]),
+            el('div', { class: 'bar' }, [el('i', { style: 'width:' + pct + '%' })])
+          ]);
+        }))));
+
+        page.appendChild(el('div', { class: 'card' }, [
+          el('div', { class: 'card-head' }, [el('h2', { class: 'card-title', text: '学习档案' })]),
+          el('p', { class: 'card-summary', text: '学生：小满 · 六年级' }),
+          el('div', { class: 'actions' }, [
+            el('button', { class: 'btn ghost', type: 'button', text: '修改学生姓名', onclick: function () { alert('预览模式下不执行操作'); } })
+          ])
+        ]));
+
+        page.appendChild(el('div', { class: 'card' }, [
+          el('div', { class: 'card-head' }, [el('h2', { class: 'card-title', text: '账号' })]),
+          el('p', { class: 'card-summary', text: 'parent@example.com' }),
+          el('p', { class: 'card-summary', text: '这个账号就是整个家庭的学习档案，家长和孩子在不同设备上登录看到的进度是同一份。' }),
+          el('div', { class: 'actions' }, [
+            el('button', { class: 'btn ghost', type: 'button', text: '退出登录', onclick: function () { alert('预览模式下不执行操作'); } })
+          ])
+        ]));
+      }
+
+      function openLesson(item) {
+        var page = $('#pv-page');
+        clear(page);
+        $('#pv-title').textContent = item.name;
+        $('#pv-sub').textContent = item.subject + ' · ' + item.chapter;
+        $('#pv-tabbar').style.display = 'none';
+
+        page.appendChild(el('div', { class: 'steps' }, [
+          el('span', { class: 'step on', text: '定向学习' }),
+          el('span', { class: 'step', text: '针对练习' }),
+          el('span', { class: 'step', text: '掌握更新' })
+        ]));
+
+        page.appendChild(el('div', { class: 'card' }, [
+          el('div', { class: 'lesson-body', text:
+            '圆的周长，说的就是绕圆一圈的长度。\n\n' +
+            '为什么它等于直径乘圆周率？因为无论圆画得多大或多小，周长和直径的比值永远是一个固定的数，约等于 3.14，这就是圆周率 π。所以只要知道直径，乘一下就知道周长。\n\n' +
+            '举个例子：一个圆形花坛直径 6 米。周长 = 6 × 3.14 = 18.84 米。如果题目给的是半径 3 米，要先乘 2 变回直径：2 × 3.14 × 3 = 18.84 米。\n\n' +
+            '最容易错的地方：题目给半径时直接乘 π 忘了乘 2。看到半径先想一遍「要不要乘 2」。'
+          }])
+        ]));
+
+        page.appendChild(el('div', { class: 'actions' }, [
+          el('button', {
+            class: 'btn', type: 'button', text: '开始练习（3 题）',
+            onclick: function () { openQuestion(item); }
+          })
+        ]));
+
+        page.appendChild(el('div', { class: 'actions' }, [
+          el('button', {
+            class: 'btn ghost', type: 'button', text: '返回清单',
+            onclick: function () { backToList(); }
+          })
+        ]));
+      }
+
+      function openQuestion(item) {
+        var page = $('#pv-page');
+        clear(page);
+        $('#pv-title').textContent = item.name;
+        $('#pv-sub').textContent = item.subject + ' · ' + item.chapter;
+
+        page.appendChild(el('div', { class: 'steps' }, [
+          el('span', { class: 'step done', text: '定向学习' }),
+          el('span', { class: 'step on', text: '针对练习' }),
+          el('span', { class: 'step', text: '掌握更新' })
+        ]));
+
+        page.appendChild(el('div', { class: 'section-title' }, [
+          '第 1 / 3 题',
+          el('span', { class: 'count', text: '单选题' })
+        ]));
+
+        page.appendChild(el('div', { class: 'card' }, [
+          el('div', { class: 'question', text: '一个圆形花坛的直径是 6 米，它的周长是多少米？' })
+        ]));
+
+        var answered = false;
+        var wrap = el('div');
+        page.appendChild(wrap);
+
+        ['18.84 米', '9.42 米', '37.68 米', '28.26 米'].forEach(function (text, i) {
+          var letter = ['A', 'B', 'C', 'D'][i];
+          wrap.appendChild(el('button', {
+            class: 'option', type: 'button',
+            onclick: function () {
+              if (answered) return;
+              answered = true;
+              var nodes = wrap.querySelectorAll('.option');
+              nodes[0].classList.add('right');
+              if (letter !== 'A') this.classList.add('wrong');
+              wrap.appendChild(el('div', { class: 'answer-box' }, [
+                el('div', { class: 'verdict ' + (letter === 'A' ? 'ok' : 'no'), text: letter === 'A' ? '答对了' : '答错了' }),
+                el('div', { class: 'line', text: '正确答案：A' }),
+                el('div', { class: 'line', text: '解析：周长 = 直径 × 圆周率 = 6 × 3.14 = 18.84 米。选项 B 是把直径当半径算了，选项 C 是多乘了 2，选项 D 是圆的面积。' })
+              ]));
+              wrap.appendChild(el('div', { class: 'actions' }, [
+                el('button', {
+                  class: 'btn', type: 'button', text: '下一题',
+                  onclick: function () {
+                    clear(page);
+                    page.appendChild(el('div', { class: 'result-hero' }, [
+                      el('div', { class: 'big', text: '67%' }),
+                      el('div', { class: 'cap', text: '本次答对 2 / 3 题' })
+                    ]));
+                    page.appendChild(el('div', { class: 'card' }, [
+                      el('div', { class: 'card-head' }, [
+                        el('h2', { class: 'card-title', text: '圆的周长' }),
+                        el('span', { class: 'tag learning', text: '待巩固' })
+                      ]),
+                      el('p', { class: 'card-summary', text: '还需要再练几轮。累计正确率达到 80% 以上就会标记为已掌握。' }),
+                      el('p', { class: 'card-summary', text: '累计：答对 2 / 4 次' })
+                    ]));
+                    page.appendChild(el('div', { class: 'actions' }, [
+                      el('button', { class: 'btn secondary', type: 'button', text: '再练一组', onclick: function () { openQuestion(item); } }),
+                      el('button', { class: 'btn', type: 'button', text: '返回清单', onclick: function () { backToList(); } })
+                    ]));
+                  }
+                })
+              ]));
+            }
+          }, [
+            el('span', { class: 'key', text: letter }),
+            el('span', { text: text })
+          ]));
+        });
+      }
+
+      function backToList() {
+        $('#pv-tabbar').style.display = '';
+        switchTab('today');
+      }
+
+      function switchTab(tab) {
+        state.tab = tab;
+        Array.prototype.forEach.call(document.querySelectorAll('#pv-tabbar button'), function (btn) {
+          btn.classList.toggle('on', btn.getAttribute('data-tab') === tab);
+        });
+        var titles = { today: '今日任务', map: '知识图谱', wrong: '错题本', me: '我的' };
+        $('#pv-title').textContent = titles[tab];
+        var s = stats();
+        $('#pv-sub').textContent = '小满 · 已掌握 ' + s.mastered + '/' + s.total;
+        if (tab === 'today') renderToday();
+        else if (tab === 'map') renderMap();
+        else if (tab === 'wrong') renderWrong();
+        else renderMe();
+      }
+
+      Array.prototype.forEach.call(document.querySelectorAll('#pv-tabbar button'), function (btn) {
+        btn.addEventListener('click', function () { switchTab(btn.getAttribute('data-tab')); });
+      });
+
+      switchTab('today');
+    })();
+  </script>
+</body>
+
+</html>

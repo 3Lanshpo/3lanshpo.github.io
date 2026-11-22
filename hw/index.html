@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>硬件工程师导学系统</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css?v=20261122a">
+</head>
+<body>
+
+  <div class="screen active" id="screen-boot">
+    <div class="boot">
+      <div class="boot-logo">硬</div>
+      <div class="boot-text">硬件工程师导学系统</div>
+      <div class="boot-hint" id="boot-hint">正在加载知识库…</div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-main">
+    <div class="appbar">
+      <div style="flex:1;min-width:0">
+        <h1 id="main-title">知识图谱</h1>
+        <div class="sub" id="main-sub"></div>
+      </div>
+    </div>
+
+    <div class="page" id="main-page"></div>
+
+    <nav class="tabbar" id="tabbar">
+      <button type="button" data-tab="map" class="on">图谱</button>
+      <button type="button" data-tab="wrong">错题本</button>
+      <button type="button" data-tab="board">看板</button>
+    </nav>
+  </div>
+
+  <div class="screen" id="screen-learn">
+    <div class="appbar">
+      <button type="button" class="btn ghost mini" id="learn-back">← 返回</button>
+      <div style="flex:1;min-width:0">
+        <h1 id="learn-title">学习</h1>
+        <div class="sub" id="learn-sub"></div>
+      </div>
+    </div>
+    <div class="page" id="learn-page"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+  <script src="config.js?v=20261122a"></script>
+  <script src="api.js?v=20261122a"></script>
+  <script src="ui.js?v=20261122a"></script>
+</body>
+</html>

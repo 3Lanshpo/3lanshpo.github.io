@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>高考化学虚拟实验室</title>
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="app.css?v=20261104a">
+</head>
+<body>
+  <!-- 登录/开场 -->
+  <div class="screen active" id="screen-auth">
+    <div class="auth-box card">
+      <div class="auth-logo">🧪</div>
+      <h1>高考化学虚拟实验室</h1>
+      <p class="hint">看十年真题 · 做动手实验 · 补操作短板</p>
+      <input id="in-name" type="text" placeholder="你的名字" autocomplete="off">
+      <button id="btn-start" type="button">开始学习</button>
+    </div>
+  </div>
+
+  <!-- 主界面 -->
+  <div class="screen" id="screen-main">
+    <div class="appbar">
+      <div style="flex:1;min-width:0">
+        <h1 id="main-title">实验图谱</h1>
+        <div class="sub" id="main-sub"></div>
+      </div>
+    </div>
+    <div class="page" id="main-page"></div>
+    <nav class="tabbar" id="tabbar">
+      <button type="button" data-tab="map" class="on">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        实验图谱
+      </button>
+      <button type="button" data-tab="quiz">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        真题演练
+      </button>
+      <button type="button" data-tab="wrong">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        错题本
+      </button>
+      <button type="button" data-tab="board">
+        <svg class="glyph" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg>
+        学习看板
+      </button>
+    </nav>
+  </div>
+
+  <!-- 实验详情（子页） -->
+  <div class="screen" id="screen-sub">
+    <div class="appbar">
+      <button class="icon-btn" id="btn-back" type="button" aria-label="返回">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div style="flex:1;min-width:0"><h1 id="sub-title"></h1><div class="sub" id="sub-tag"></div></div>
+    </div>
+    <div class="page" id="sub-page"></div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="data.js?v=20261104a"></script>
+  <script src="ui.js?v=20261104a"></script>
+</body>
+</html>
